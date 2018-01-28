@@ -341,7 +341,43 @@ var TrackerJacker = (function() {
 		
 		return pre+"[["+expr+"]]"+getFormattedRoll(post);
 	};
-	
+
+  var doRollInitiative = function (turnorder) {
+    log('TJ: Rolling standard initiative');
+
+    //loop over each token in the initiative list, set their init to -1
+    //then roll and set their proper init
+    if (!turnorder) {
+      return;
+    } else if (typeof turnorder === 'string') {
+      turnorder = JSON.parse(turnorder);
+    }
+
+    _.each(turnorder, function (entry) {
+      if (entry.id !== '-1') {
+        //have a token entry, set its init to -1
+        entry.pr = '-1';
+        var token = getObj("graphic", entry.id);
+        if (token != null){
+          let represents = token.get("represents");
+          if (represents != "") {
+            let init_mod = getAttrByName(represents, 'initiative');
+            log('DEBUG: represents: ' + represents + ' with init mod = ' + init_mod);
+            entry.pr = (randomInteger(20) + parseInt(init_mod)).toString();
+          }
+        }
+      }
+    });
+
+    //Sort results in descending order
+    turnorder.sort(function (a, b) {
+      let first = a.pr;
+      let second = b.pr;
+
+      return second - first;
+    });
+  }
+
 	/**
 	 * Return the target expression expanded as far as it logically can span
 	 * within the provided line.
@@ -442,12 +478,12 @@ var TrackerJacker = (function() {
 			{turnorder = JSON.parse(turnorder);}
 		var tracker; 
 
-		if (tracker = _.find(turnorder, function(e,i) {if (parseInt(e.id) === -1 && parseInt(e.pr) === -100 && e.custom.match(/Round\s*\d+/)){return true;}})) {
+		if (tracker = _.find(turnorder, function(e,i) {if (parseInt(e.id) === -1 && parseInt(e.pr) === 100 && e.custom.match(/Round\s*\d+/)){return true;}})) {
 			// resume logic
 		} else {
 			turnorder.push({
 				id: '-1',
-				pr: '-100',
+				pr: '100',
 				custom: 'Round 1',
 			});
 			//TODO only clear statuses that have a duration
@@ -611,7 +647,7 @@ var TrackerJacker = (function() {
 		var tracker,
 			trackerpos; 
 		
-		if (!!(tracker = _.find(turnorder, function(e,i) {if (parseInt(e.id) === -1 && parseInt(e.pr) === -100 && e.custom.match(/Round\s*\d+/)){trackerpos = i;return true;}}))) {
+		if (!!(tracker = _.find(turnorder, function(e,i) {if (parseInt(e.id) === -1 && parseInt(e.pr) === 100 && e.custom.match(/Round\s*\d+/)){trackerpos = i;return true;}}))) {
 			
 			var indicator,
 				graphic = findTrackerGraphic(),
@@ -624,6 +660,7 @@ var TrackerJacker = (function() {
 				case TJ_StateEnum.ACTIVE:
 					graphic.set('tint_color','transparent'); 
 					indicator = '▶ ';
+          doRollInitiative(turnorder);
 					break;
 				case TJ_StateEnum.PAUSED:
 					graphic = findTrackerGraphic();
@@ -1187,7 +1224,7 @@ var TrackerJacker = (function() {
 	 */
 	var isTracker = function(turn) {
 		if (parseInt(turn.id) === -1 
-		&& parseInt(turn.pr) === -100
+		&& parseInt(turn.pr) === 100
 		&& turn.custom.match(/Round\s*\d+/))
 			{return true;}
 		return false;
@@ -1301,6 +1338,7 @@ var TrackerJacker = (function() {
 				currentTurn.custom = currentTurn.custom.substring(0,currentTurn.custom.indexOf('Round')) 
 					+ 'Round ' + rounds;
 				announceRound(rounds);
+        
 				turnorder.shift();
 				turnorder.push(currentTurn);
 				currentTurn = turnorder[0];
@@ -2495,7 +2533,7 @@ var TrackerJacker = (function() {
 			prepareTurnorder();
 		} else {
 			if(!_.find(turnorder, function(e) {
-				if (parseInt(e.id) === -1 && parseInt(e.pr) === -100 && e.custom.match(/Round\s*\d+/)) {
+				if (parseInt(e.id) === -1 && parseInt(e.pr) === 100 && e.custom.match(/Round\s*\d+/)) {
 					e.custom = 'Round ' + initial;
 					return true;
 				}
