@@ -957,13 +957,14 @@ var TrackerJacker = (function() {
 			controllers = getTokenControllers(curToken);  
 
 		if ((journal = getObj('character',curToken.get('represents')))) {
-			name = characterObjExists('name','attribute',journal.get('_id')); 
-			if (name) 
+			name = curToken.get('name');
+      if (!name) {
+        name = characterObjExists('name', 'attribute', journal.get('_id')); 
+        if (name) 
 				{name = name.get('current');}
-			else if (curToken.get('showplayers_name')) 
-				{name = curToken.get('name');}
-			else 
+        else 
 				{name = journal.get('name');}
+      }
 		} else if (curToken.get('showplayers_name')) {
 			name = curToken.get('name');
 		}
