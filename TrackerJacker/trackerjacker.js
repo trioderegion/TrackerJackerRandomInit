@@ -1340,9 +1340,9 @@ var TrackerJacker = (function() {
 					+ 'Round ' + rounds;
 				announceRound(rounds);
         
-				turnorder.shift();
-				turnorder.push(currentTurn);
-				currentTurn = turnorder[0];
+				//turnorder.shift();
+				//turnorder.push(currentTurn);
+				//currentTurn = turnorder[0];
 				updateTurnorderMarker(turnorder);
 			}
 			if (currentTurn.id !== -1 
